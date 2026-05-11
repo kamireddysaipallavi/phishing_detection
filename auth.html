@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>User Authentication</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="navbar">
+<a href="index.html">Home</a>
+<a href="register.html">Register</a>
+<a href="login.html">Login</a>
+<a href="url.html">URL Analysis</a>
+<a href="email.html">Email Analysis</a>
+<a href="sms.html">SMS Analysis</a>
+<a href="bulk.html">Bulk Checker</a>
+<a href="result.html">Explainable Result</a>
+<a href="tips.html">Safety Tips</a>
+<a href="quiz.html">Phishing Quiz</a>
+<a href="news.html">Threat News</a>
+<a href="password.html">Password Checker</a>
+<a href="auth.html">User Authentication</a>
+<a href="dashboard.html">Dashboard</a>
+<a href="history.html">Threat History</a>
+</div>
+
+<div class="page-wrapper">
+  <div class="content-box">
+    <h2>🔐 User Authentication</h2>
+
+    <div id="loggedInSection" style="display:none;">
+      <p style="color:#1abc9c; font-size:18px;">✅ You are logged in!</p>
+      <p id="welcomeMsg" style="font-size:16px; color:white;"></p>
+      <hr>
+      <h3>Account Details</h3>
+      <p id="accountDetails" style="text-align:left;"></p>
+      <hr>
+      <h3>Security Status</h3>
+      <p style="text-align:left; color:#bdc3c7;">
+        🔒 Password Protected: <span style="color:#1abc9c;">Yes</span><br><br>
+        🛡️ Session Active: <span style="color:#1abc9c;">Yes</span><br><br>
+        🌐 Data Stored: <span style="color:#1abc9c;">Local (Browser Only)</span><br><br>
+        🔑 Auth Type: <span style="color:#1abc9c;">Username & Password</span>
+      </p>
+      <br>
+      <button class="btn-danger" onclick="logoutUser()">Logout</button>
+    </div>
+
+    <div id="loggedOutSection">
+      <p style="color:#e74c3c; font-size:16px;">⚠️ You are not logged in.</p>
+      <p style="color:#bdc3c7;">Please login or register to access your account.</p>
+      <br>
+      <button onclick="window.location.href='login.html'">Login</button>
+      &nbsp;
+      <button class="btn-outline" onclick="window.location.href='register.html'">Register</button>
+      <hr>
+      <h3>What is User Authentication?</h3>
+      <ul style="text-align:left;">
+        <li>✅ <b>Registration</b> — Create a secure account</li>
+        <li>✅ <b>Login</b> — Verify identity before access</li>
+        <li>✅ <b>Session Management</b> — Track logged-in users</li>
+        <li>✅ <b>Password Protection</b> — Only authorized access</li>
+        <li>✅ <b>Logout</b> — Safely end your session</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+window.onload = function() {
+  const currentUser = localStorage.getItem("currentUser");
+  const users = JSON.parse(localStorage.getItem("users") || "{}");
+  if (currentUser && users[currentUser]) {
+    document.getElementById("loggedInSection").style.display = "block";
+    document.getElementById("loggedOutSection").style.display = "none";
+    const user = users[currentUser];
+    document.getElementById("welcomeMsg").innerText = "Welcome, " + user.fullname + "!";
+    document.getElementById("accountDetails").innerHTML =
+      "👤 Full Name: <b>" + user.fullname + "</b><br><br>" +
+      "📧 Email: <b>" + user.email + "</b><br><br>" +
+      "🔑 Username: <b>" + currentUser + "</b>";
+  }
+};
+function logoutUser() {
+  localStorage.removeItem("currentUser");
+  alert("✅ Logged out successfully!");
+  window.location.href = "index.html";
+}
+</script>
+
+<button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+<script>
+function toggleTheme() {
+  document.body.classList.toggle("light-mode");
+  const btn = document.querySelector(".theme-toggle");
+  btn.innerText = document.body.classList.contains("light-mode") ? "🌙" : "☀️";
+  localStorage.setItem("theme", document.body.classList.contains("light-mode") ? "light" : "dark");
+}
+window.onload = function() {
+  if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light-mode");
+    const btn = document.querySelector(".theme-toggle");
+    if (btn) btn.innerText = "🌙";
+  }
+}
+</script>
+
+</body>
+</html>

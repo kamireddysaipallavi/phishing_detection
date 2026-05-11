@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>URL Analysis - TRUSTA</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/nav.js"></script>
+</head>
+
+<body>
+
+<div class="navbar" id="navbar"></div>
+
+<div class="page-wrapper">
+  <div class="content-box">
+    <h2>🔗 URL Phishing Detection</h2>
+    <p style="color:#8b949e; margin-bottom:15px;">
+      Enter a website URL to check if it is safe or phishing.
+    </p>
+
+    <input type="text" id="urlInput" placeholder="e.g. https://example.com">
+    <button onclick="analyzeURL()">🔍 Analyze</button>
+  </div>
+</div>
+
+<script>
+// ✅ Save history PER USER
+function saveToHistory(type, input, result, confidence) {
+  const user = localStorage.getItem("currentUser");
+  if (!user) return;
+
+  const key = "threatHistory_" + user;
+  const history = JSON.parse(localStorage.getItem(key) || "[]");
+
+  history.push({
+    type,
+    input,
+    result,
+    confidence,
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem(key, JSON.stringify(history));
+}
+
+// ✅ MAIN FUNCTION
+function analyzeURL() {
+    let input = document.getElementById("urlInput").value.trim();
+
+    if (!input) {
+        alert("⚠️ Please enter a URL");
+        return;
+    }
+
+    // ✅ FIX: auto add http if missing
+    if (!input.startsWith("http://") && !input.startsWith("https://")) {
+        input = "http://" + input;
+    }
+
+    fetch("http://127.0.0.1:5000/url", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ input: input })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        // ✅ Save user-wise history
+        saveToHistory("URL", input, data.prediction, data.confidence);
+
+        // ✅ Store result for explain page
+        localStorage.setItem("analysisResult", JSON.stringify({
+            type: "URL",
+            input: input,
+            result: data
+        }));
+
+        // ✅ Redirect to result page
+        window.location.href = "result.html";
+    })
+    .catch(err => {
+        console.error(err);
+        alert("❌ Backend error. Make sure Flask is running.");
+    });
+}
+
+// ✅ INIT PAGE (navbar + theme)
+window.onload = function() {
+  if (!initPage(true)) return;
+};
+</script>
+
+</body>
+</html>

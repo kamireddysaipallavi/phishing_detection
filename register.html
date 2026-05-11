@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register - TRUSTA</title>
+
+<link rel="stylesheet" href="css/style.css">
+<script src="js/nav.js"></script> <!-- ✅ IMPORTANT -->
+
+<style>
+.pwd-wrap{
+  position:relative;
+  margin:10px 0;
+}
+
+/* PASSWORD INPUT */
+.pwd-wrap input{
+  display:block!important;
+  width:100%!important;
+  padding:12px 45px 12px 15px!important;
+  border-radius:10px!important;
+  border:1px solid #94a3b8!important;   /* stronger border */
+  background:#f8fbff!important;         /* soft light blue-white */
+  color:#1e293b!important;              /* dark readable text */
+  font-size:15px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08); /* depth */
+}
+
+/* FOCUS */
+.pwd-wrap input:focus{
+  outline:none!important;
+  border-color:#3b82f6!important;
+  box-shadow:0 0 0 3px rgba(59,130,246,0.2);
+}
+
+/* EYE BUTTON */
+.eye-btn{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  background:none!important;
+  border:none!important;
+  color:#64748b;
+  cursor:pointer;
+  font-size:16px;
+}
+
+/* NORMAL TEXT INPUT */
+.txt-input{
+  display:block;
+  width:100%;
+  padding:12px 15px;
+  border-radius:10px;
+  border:1px solid #94a3b8;
+  background:#f8fbff;
+  color:#1e293b;
+  font-size:15px;
+  box-sizing:border-box;
+  margin:10px 0;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+}
+
+.txt-input:focus{
+  outline:none;
+  border-color:#3b82f6;
+  box-shadow:0 0 0 3px rgba(59,130,246,0.2);
+}
+
+/* BUTTON */
+.full-btn{
+  width:100%;
+  padding:12px;
+  background:#3b82f6;
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:8px;
+  transition:0.3s;
+}
+
+.full-btn:hover{
+  background:#2563eb;
+}
+
+/* STRENGTH BAR */
+.strength-bar{
+  width:100%;
+  background:#e2e8f0;
+  border-radius:6px;
+  height:6px;
+  margin:8px 0;
+  border:1px solid #cbd5f5;
+}
+
+.strength-fill{
+  height:6px;
+  border-radius:6px;
+  transition:all 0.3s;
+  background:#3b82f6;
+}
+
+/* CHECK ROW */
+.check-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  margin:4px 0;
+  color:#475569;
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar" id="navbar"></div>
+
+<div class="page-wrapper">
+  <div class="content-box">
+    <h2>👤 Create Account</h2>
+
+    <input type="text" id="fullname" class="txt-input" placeholder="Enter Full Name">
+    <input type="email" id="email" class="txt-input" placeholder="Enter Email">
+    <p id="emailMsg" style="font-size:12px;margin:-6px 0 6px;"></p>
+
+    <input type="text" id="username" class="txt-input" placeholder="Choose Username">
+
+    <div class="pwd-wrap">
+      <input type="password" id="password" placeholder="Choose Password" oninput="checkStrength()">
+      <button class="eye-btn" type="button" onclick="togglePwd('password')"></button>
+    </div>
+
+    <div class="strength-bar">
+      <div class="strength-fill" id="sBar"></div>
+    </div>
+
+    <p id="sLabel" style="font-size:12px;"></p>
+    <div id="pwdChecks"></div>
+
+    <div class="pwd-wrap">
+      <input type="password" id="confirmPassword" placeholder="Confirm Password">
+      <button class="eye-btn" type="button" onclick="togglePwd('confirmPassword')"></button>
+    </div>
+
+    <button class="full-btn" onclick="registerUser()">Register</button>
+
+    <p id="msg" style="margin-top:10px;font-weight:600;font-size:14px;"></p>
+
+    <hr style="border:none;border-top:1px solid #21262d;margin:16px 0;">
+
+    <p style="color:#8b949e;">
+      Already have an account? 
+      <a href="login.html" style="color:#1abc9c;">Login here</a>
+    </p>
+
+  </div>
+</div>
+
+<script>
+function togglePwd(id) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function validateEmail(email) {
+  return /^[\w\.\+\-]+@[\w\.-]+\.\w{2,}$/.test(email);
+}
+
+document.getElementById('email').addEventListener('input', function() {
+  const msg = document.getElementById('emailMsg');
+  if (this.value && !validateEmail(this.value)) {
+    msg.style.color = '#f85149';
+    msg.innerText = '❌ Invalid email format';
+  } else if (this.value) {
+    msg.style.color = '#1abc9c';
+    msg.innerText = '✅ Valid email';
+  } else {
+    msg.innerText = '';
+  }
+});
+
+function checkStrength() {
+  const pwd = document.getElementById('password').value;
+
+  const checks = [
+    { label: '8+ characters', pass: pwd.length >= 8 },
+    { label: 'Uppercase', pass: /[A-Z]/.test(pwd) },
+    { label: 'Number', pass: /[0-9]/.test(pwd) },
+    { label: 'Special char', pass: /[!@#$%^&*]/.test(pwd) },
+  ];
+
+  const score = checks.filter(c => c.pass).length;
+
+  const colors = ['#f85149','#f85149','#e3b341','#1abc9c','#1abc9c'];
+  const labels = ['','Weak','Fair','Strong','Very Strong'];
+
+  document.getElementById('sBar').style.width = (score/4*100) + '%';
+  document.getElementById('sBar').style.background = colors[score];
+  document.getElementById('sLabel').innerText = labels[score];
+
+  document.getElementById('pwdChecks').innerHTML =
+    checks.map(c =>
+      `<div class="check-row" style="color:${c.pass?'#1abc9c':'#484f58'}">
+        ${c.pass?'✅':'❌'} ${c.label}
+      </div>`
+    ).join('');
+}
+
+function registerUser() {
+  const fullname = document.getElementById('fullname').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const confirmPassword = document.getElementById('confirmPassword').value;
+  const msg = document.getElementById('msg');
+
+  if (!fullname||!email||!username||!password||!confirmPassword) {
+    msg.style.color='#f85149';
+    msg.innerText='❌ Fill all fields';
+    return;
+  }
+
+  if (!validateEmail(email)) {
+    msg.style.color='#f85149';
+    msg.innerText='❌ Invalid email';
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    msg.style.color='#f85149';
+    msg.innerText='❌ Password mismatch';
+    return;
+  }
+
+  const users = JSON.parse(localStorage.getItem('users') || '{}');
+
+  if (users[username]) {
+    msg.style.color='#f85149';
+    msg.innerText='❌ Username exists';
+    return;
+  }
+
+  users[username] = { fullname, email, password };
+
+  localStorage.setItem('users', JSON.stringify(users));
+
+  msg.style.color='#1abc9c';
+  msg.innerText='✅ Registered successfully';
+
+  setTimeout(() => window.location.href='login.html', 1500);
+}
+
+window.onload = function() {
+  buildNavbar(); // ✅ ONLY from nav.js
+
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-mode');
+  }
+};
+</script>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
+</body>
+</html>

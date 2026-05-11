@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Explainable Result - TRUSTA</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/nav.js"></script>
+
+<style>
+body {
+    background: linear-gradient(135deg, #020617, #021f1f);
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    color: #e6edf3;
+}
+.page-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 80px;
+}
+.content-box {
+    width: 700px;
+    background: white;
+    border-radius: 14px;
+    padding: 30px;
+    box-shadow: 0 0 25px rgba(0,255,200,0.1);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+h2 { text-align: center; color: #1abc9c; }
+.result-box {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 10px;
+    font-weight: bold;
+}
+.phishing { background:white; border-left:6px solid #f85149; }
+.safe { background:white; border-left:6px solid #1abc9c; }
+
+.score { font-size:20px; margin-top:10px; }
+
+.feature {
+    margin-top:12px;
+    padding:12px;
+    background:white;
+    border-radius:8px;
+    border-left:5px solid;
+}
+.danger { border-color:#f85149; }
+.warning { border-color:#f39c12; }
+.good { border-color:#1abc9c; }
+
+.summary-box {
+    margin-top:20px;
+    padding:15px;
+    background:white;
+    border-left:5px solid #58a6ff;
+    border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="navbar" id="navbar"></div>
+
+<div class="page-wrapper">
+<div class="content-box" id="resultContainer"></div>
+</div>
+
+<script>
+window.onload = function() {
+
+    if (!initPage(true)) return;
+
+    const stored = localStorage.getItem("analysisResult");
+
+    if (!stored) {
+        document.getElementById("resultContainer").innerHTML =
+            "<h2>❌ No result found</h2>";
+        return;
+    }
+
+    const { type, input, result } = JSON.parse(stored);
+    const container = document.getElementById("resultContainer");
+
+    const isPhish = result.prediction === "Phishing";
+
+    // 🔥 SMART SUMMARY GENERATION
+    let summaryText = "";
+
+    if (result.features && result.features.length > 0) {
+        const high = result.features.filter(f => f.level === "high").length;
+        const medium = result.features.filter(f => f.level === "medium").length;
+
+        if (isPhish) {
+            summaryText = `This ${type} is classified as phishing due to ${high} high-risk and ${medium} medium-risk indicators. It is recommended to avoid interacting with this content.`;
+        } else {
+            summaryText = `This ${type} appears safe with minimal suspicious indicators. However, always stay cautious while interacting online.`;
+        }
+    } else {
+        summaryText = isPhish
+            ? "This input shows strong phishing behavior patterns."
+            : "No suspicious behavior detected. This appears safe.";
+    }
+
+    container.innerHTML = `
+        <h2>🔍 ${type} Analysis Result</h2>
+
+        <div class="result-box ${isPhish ? "phishing" : "safe"}">
+            <p><b>Input:</b> ${input}</p>
+            <div class="score">
+                ${result.prediction} (${result.confidence}%)
+            </div>
+        </div>
+
+        <h3 style="margin-top:20px;">📊 Explanation</h3>
+        <div id="features"></div>
+
+        <div class="summary-box">
+            <b>🧠 AI Insight:</b><br>
+            ${summaryText}
+        </div>
+    `;
+
+    const featuresDiv = document.getElementById("features");
+
+    // 🔥 DYNAMIC FEATURE DISPLAY
+    if (result.features && result.features.length > 0) {
+
+        result.features.forEach(f => {
+
+            let cls = "good";
+            let icon = "✅";
+
+            if (f.level === "high") {
+                cls = "danger";
+                icon = "🚨";
+            }
+            else if (f.level === "medium") {
+                cls = "warning";
+                icon = "⚠️";
+            }
+
+            featuresDiv.innerHTML += `
+                <div class="feature ${cls}">
+                    ${icon} <b>${f.title}</b><br>
+                    <span>${f.description}</span>
+                </div>
+            `;
+        });
+
+    } else {
+
+        // 🔥 FALLBACK SMART LOGIC (important)
+        let autoReason = "";
+
+        if (type === "URL") {
+            if (input.includes("@")) autoReason = "URL contains '@' symbol which is commonly used in phishing.";
+            else if (input.length > 80) autoReason = "URL is unusually long which is suspicious.";
+            else autoReason = "No risky patterns detected in URL.";
+        }
+
+        if (type === "Email" || type === "SMS") {
+            if (input.toLowerCase().includes("urgent"))
+                autoReason = "Message creates urgency which is common in phishing.";
+            else if (input.toLowerCase().includes("otp"))
+                autoReason = "Request for OTP detected which is sensitive information.";
+            else autoReason = "No suspicious wording detected.";
+        }
+
+        featuresDiv.innerHTML = `
+            <div class="feature good">
+                ${autoReason}
+            </div>
+        `;
+    }
+};
+</script>
+
+</body>
+</html>

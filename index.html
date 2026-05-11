@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>TRUSTA</title>
+<link rel="stylesheet" href="css/style.css">
+
+<style>
+body {
+  background-image: url("C:\Users\Sai pallavi\OneDrive\Desktop\80\mini_1.final\mini_1\pd1.jpeg"); /* change path if needed */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+</style>
+
+</head>
+<body>
+
+<div class="navbar">
+<a href="index.html">Home</a>
+<a href="register.html">Register</a>
+<a href="login.html">Login</a>
+<a href="url.html">URL Analysis</a>
+<a href="email.html">Email Analysis</a>
+<a href="sms.html">SMS Analysis</a>
+<a href="bulk.html">Bulk Checker</a>
+<a href="result.html">Explainable Result</a>
+
+<a href="quiz.html">Phishing Quiz</a>
+
+<a href="password.html">Password Checker</a>
+
+<a href="userdashboard.html">Dashboard</a>
+
+</div>
+
+
+<div class="hero">
+  <h1>🛡️ TRUSTA</h1>
+  <p class="tagline">Threat Recognition and User Safety Model</p>
+  <p class="subtitle">AI-powered phishing detection for URLs and emails — keeping you safe online.</p>
+
+  <div class="stats">
+    <div class="stat"><h2>98%</h2><p>Email Detection Accuracy</p></div>
+    <div class="stat"><h2>95%</h2><p>URL Detection Accuracy</p></div>
+    <div class="stat"><h2>Real-Time</h2><p>Instant Threat Alerts</p></div>
+    <div class="stat"><h2>50+</h2><p>Phishing Pattern Rules</p></div>
+  </div>
+
+    <div class="cards">
+    <a href="url.html" class="card"><span class="icon">🔗</span><h3>URL Analysis</h3><p>Detect phishing links instantly</p></a>
+    <a href="email.html" class="card"><span class="icon">📧</span><h3>Email Analysis</h3><p>Scan emails for threats</p></a>
+    <a href="sms.html" class="card"><span class="icon">📱</span><h3>SMS Analysis</h3><p>Detect smishing attacks</p></a>
+    <a href="bulk.html" class="card"><span class="icon">📋</span><h3>Bulk Checker</h3><p>Check multiple URLs at once</p></a>
+    <a href="quiz.html" class="card"><span class="icon">🎯</span><h3>Phishing Quiz</h3><p>Test your awareness</p></a>
+    <a href="password.html" class="card"><span class="icon">🔑</span><h3>Password Checker</h3><p>Check password strength</p></a>
+    
+    <a href="dashboard.html" class="card"><span class="icon">📊</span><h3>Dashboard</h3><p>View detection statistics</p></a>
+  </div>
+
+  <div class="cta-buttons">
+
+<button class="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+<script>
+function toggleTheme() {
+  document.body.classList.toggle("light-mode");
+  const btn = document.querySelector(".theme-toggle");
+  btn.innerText = document.body.classList.contains("light-mode") ? "🌙" : "☀️";
+  localStorage.setItem("theme", document.body.classList.contains("light-mode") ? "light" : "dark");
+}
+window.onload = function() {
+  if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light-mode");
+    const btn = document.querySelector(".theme-toggle");
+    if (btn) btn.innerText = "🌙";
+  }
+}
+</script>
+
+</body>
+</html>

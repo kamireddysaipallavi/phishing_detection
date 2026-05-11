@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SMS Analysis - TRUSTA</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.confidence-bar { width:100%; background:#21262d; border-radius:10px; height:10px; margin:10px 0 4px; overflow:hidden; }
+.confidence-fill { height:10px; border-radius:10px; transition:width 0.6s ease; }
+.steps-box { background:#0d1117; border:1px solid #1abc9c44; border-radius:10px; padding:16px 20px; margin-top:16px; text-align:left; }
+.steps-box h3 { color:#1abc9c; margin-bottom:10px; }
+.steps-box ul { padding-left:20px; }
+.steps-box ul li { color:#c9d1d9; font-size:14px; margin:8px 0; }
+</style>
+</head>
+<body>
+<div class="navbar">
+<a href="index.html">Home</a>
+<a href="register.html">Register</a>
+<a href="login.html">Login</a>
+<a href="url.html">URL Analysis</a>
+<a href="email.html">Email Analysis</a>
+<a href="sms.html">SMS Analysis</a>
+<a href="bulk.html">Bulk Checker</a>
+<a href="result.html">Explainable Result</a>
+
+<a href="quiz.html">Phishing Quiz</a>
+
+<a href="password.html">Password Checker</a>
+
+<a href="userdashboard.html">Dashboard</a>
+
+</div>
+
+<div class="page-wrapper">
+  <div class="content-box">
+    <h2>📱 SMS Phishing Detection</h2>
+    <p style="color:#8b949e; margin-bottom:20px;">Paste an SMS message below to check if it is a phishing attempt (smishing).</p>
+    <input type="text" id="smsInput" placeholder="Paste SMS content here e.g. Your bank account is blocked...">
+    <button onclick="analyzeSMS()">🔍 Analyze SMS</button>
+    <div id="resultSection" style="display:none; margin-top:16px;">
+      <p id="smsResult"></p>
+      <div class="confidence-bar"><div class="confidence-fill" id="confBar"></div></div>
+      <p id="confText" style="color:#8b949e; font-size:12px; text-align:left;"></p>
+      <div id="smsExplanation"></div>
+      <div id="stepsBox"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function saveToHistory(type, input, result, confidence) {
+  const user = localStorage.getItem("currentUser");
+  if (!user) return;
+
+  const key = "threatHistory_" + user;
+
+  const history = JSON.parse(localStorage.getItem(key) || "[]");
+
+  history.push({
+    type,
+    input,
+    result,
+    confidence,
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem(key, JSON.stringify(history));
+}
+
+const smsPhishingPatterns = [
+  { r: /urgent|immediate|act now|right away/, reason: "⚠️ <b>Urgency language</b> — Pressures you to act without thinking." },
+  { r: /account.{0,20}(block|suspend|terminat|disabl)/, reason: "🚨 <b>Account threat</b> — Fake threat to block your account." },
+  { r: /otp|one.time.password/, reason: "🚨 <b>OTP request</b> — Legitimate banks never ask for OTP via SMS link." },
+  { r: /click (here|the link|below)|tap (here|the link)/, reason: "⚠️ <b>Suspicious link prompt</b> — Directing you to a fake website." },
+  { r: /you (have won|won)|congratulations.*(prize|reward)/, reason: "🚨 <b>Prize claim</b> — Fake rewards to steal your details." },
+  { r: /kyc.{0,20}(update|verify|pending|required)/, reason: "🚨 <b>KYC request</b> — Fake KYC update to steal identity documents." },
+  { r: /free (recharge|data|gift|money|cashback)/, reason: "⚠️ <b>Free offer</b> — Too good to be true offers are phishing bait." },
+  { r: /verify.{0,20}(account|identity|number|mobile)/, reason: "⚠️ <b>Verification request</b> — Fake identity verification." },
+  { r: /refund.{0,20}(claim|process|credit)/, reason: "⚠️ <b>Fake refund</b> — Used to steal bank details." },
+  { r: /password.{0,20}(reset|expire|change)/, reason: "🚨 <b>Password reset</b> — Fake password reset to steal your account." },
+  { r: /\.(tk|xyz|top|ml|ga|cf|gq|click|win|loan)/, reason: "🚨 <b>Suspicious link domain</b> — The link uses a domain commonly used for phishing." },
+  { r: /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/, reason: "🚨 <b>IP address in link</b> — Legitimate companies never send IP address links in SMS." },
+  { r: /dear (customer|user|member|sir|madam)/, reason: "⚠️ <b>Generic greeting</b> — Phishing SMS often uses generic greetings instead of your name." },
+  { r: /bitcoin|crypto|investment.{0,20}return/, reason: "🚨 <b>Crypto/investment scam</b> — Fake investment promises." },
+  { r: /lottery|lucky draw|selected winner/, reason: "🚨 <b>Lottery scam</b> — You cannot win a lottery you never entered." },
+];
+
+const safeSMSPatterns = [
+  /your otp (is|for) \d{4,6}/,
+  /transaction of rs/,
+  /\d{4,6} is your (otp|verification code) for/,
+  /your order (has been|is) (placed|shipped|delivered)/,
+  /hi \w+, your appointment/,
+];
+
+function analyzeSMS() {
+  const input = document.getElementById("smsInput").value.trim();
+  if (!input) { alert("Please enter SMS content."); return; }
+  document.getElementById("resultSection").style.display = "none";
+
+  const t = input.toLowerCase();
+  let phishScore = 0;
+  const reasons = [];
+
+  // Check if it's a legitimate OTP SMS
+  for (const p of safeSMSPatterns) {
+    if (p.test(t)) {
+      showResult("Safe", 0.95, [], input);
+      return;
+    }
+  }
+
+  for (const p of smsPhishingPatterns) {
+    if (p.r.test(t)) { phishScore++; reasons.push(p.reason); }
+  }
+
+  // Short SMS with no patterns — safe
+  if (input.split(" ").length < 5 && phishScore === 0) {
+    showResult("Safe", 0.90, [], input);
+    return;
+  }
+
+  if (phishScore >= 2) showResult("Phishing", Math.min(0.95, 0.65 + phishScore * 0.06), reasons, input);
+  else if (phishScore === 1) showResult("Phishing", 0.72, reasons, input);
+  else showResult("Safe", 0.85, [], input);
+}
+
+function showResult(prediction, confidence, reasons, input) {
+  document.getElementById("resultSection").style.display = "block";
+  const r = document.getElementById("smsResult");
+  const conf = Math.round(confidence * 100);
+  const isPhish = prediction === "Phishing";
+
+  r.innerText = "Result: " + prediction + "  |  Confidence: " + conf + "%";
+  r.style.color = isPhish ? "#f85149" : "#1abc9c";
+  r.style.background = isPhish ? "#1a0a0a" : "#0a1a0f";
+  r.style.padding = "10px"; r.style.borderRadius = "8px";
+
+  const bar = document.getElementById("confBar");
+  bar.style.width = conf + "%";
+  bar.style.background = isPhish ? "#f85149" : "#1abc9c";
+  document.getElementById("confText").innerText = "Confidence Score: " + conf + "%";
+
+  saveToHistory("SMS", input, prediction, confidence);
+
+  if (isPhish) {
+    document.getElementById("smsExplanation").innerHTML = `<div class="explanation-box"><h3>🚨 Why this SMS is Phishing (Smishing):</h3><ul>${reasons.map(r=>`<li>${r}</li>`).join("")}</ul></div>`;
+    document.getElementById("stepsBox").innerHTML = `<div class="steps-box"><h3>🛡️ What You Should Do:</h3><ul>
+      <li>Do <b>not</b> click any link in this SMS</li>
+      <li>Do <b>not</b> call back any number in the SMS</li>
+      <li>Do <b>not</b> share OTP, password, or bank details</li>
+      <li>Block the sender number</li>
+      <li>Report it to your telecom provider (Airtel/Jio/BSNL)</li>
+      <li>Report on <b>Sanchar Saathi</b> portal (India) or local cybercrime helpline</li>
+    </ul></div>`;
+  } else {
+    document.getElementById("smsExplanation").innerHTML = `<div class="safe-box"><h3>✅ This SMS appears Safe</h3><ul>
+      <li>No urgency or threatening language detected</li>
+      <li>No suspicious links or domains found</li>
+      <li>No credential or OTP requests detected</li>
+    </ul></div>`;
+    document.getElementById("stepsBox").innerHTML = "";
+  }
+}
+</script>
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+<script>
+function toggleTheme() { document.body.classList.toggle("light-mode"); localStorage.setItem("theme", document.body.classList.contains("light-mode") ? "light" : "dark"); }
+window.onload = function() { if (localStorage.getItem("theme") === "light") document.body.classList.add("light-mode"); }
+</script>
+</body>
+</html>

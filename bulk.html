@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bulk URL Checker - TRUSTA</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.bulk-result { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:14px 18px; margin-top:10px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.bulk-result.phishing { border-left:4px solid #f85149; }
+.bulk-result.safe { border-left:4px solid #1abc9c; }
+.bulk-url { color:#e6edf3; font-size:14px; word-break:break-all; flex:1; }
+.bulk-badge { padding:4px 12px; border-radius:20px; font-size:13px; font-weight:700; white-space:nowrap; }
+.bulk-badge.phishing { background:#f8514922; color:#f85149; border:1px solid #f8514944; }
+.bulk-badge.safe { background:#1abc9c22; color:#1abc9c; border:1px solid #1abc9c44; }
+.summary-bar { display:flex; gap:16px; margin-bottom:20px; flex-wrap:wrap; }
+.summary-item { background:#161b22; border:1px solid #30363d; border-radius:8px; padding:12px 20px; text-align:center; }
+.summary-item .num { font-size:24px; font-weight:800; }
+.summary-item p { color:#8b949e; font-size:12px; margin-top:4px; }
+.page-wrapper {
+  display: flex;
+  justify-content: center;   /* horizontal center */
+  align-items: center;       /* vertical center */
+  min-height: 100vh;         /* full screen height */
+  margin: 0 auto;
+  padding: 0 20px;
+   max-width: 750px;
+}
+</style>
+</head>
+<body>
+<div class="navbar">
+<a href="index.html">Home</a>
+<a href="register.html">Register</a>
+<a href="login.html">Login</a>
+<a href="url.html">URL Analysis</a>
+<a href="email.html">Email Analysis</a>
+<a href="sms.html">SMS Analysis</a>
+<a href="bulk.html">Bulk Checker</a>
+<a href="result.html">Explainable Result</a>
+
+<a href="quiz.html">Phishing Quiz</a>
+
+<a href="password.html">Password Checker</a>
+<a href="auth.html">User Authentication</a>
+<a href="userdashboard.html">Dashboard</a>
+
+</div>
+
+<div class="page-wrapper" >
+  <div class="content-box">
+    <h2>📋 Bulk URL Checker</h2>
+    <p style="color:#8b949e; margin-bottom:16px;">Enter multiple URLs (one per line) to check all at once.</p>
+    <textarea id="bulkInput" placeholder="https://example.com&#10;https://suspicious-site.xyz&#10;https://google.com" style="height:140px; resize:vertical;"></textarea>
+    <button onclick="analyzeBulk()">🔍 Analyze All URLs</button>
+    <div id="bulkResults" style="margin-top:20px;"></div>
+  </div>
+</div>
+
+<script>
+function saveToHistory(type, input, result, confidence) {
+  const history = JSON.parse(localStorage.getItem("threatHistory") || "[]");
+  history.push({ type, input, result, confidence, time: new Date().toLocaleString() });
+  localStorage.setItem("threatHistory", JSON.stringify(history));
+}
+
+async function analyzeBulk() {
+  const input = document.getElementById("bulkInput").value.trim();
+  if (!input) { alert("Please enter at least one URL."); return; }
+  const urls = input.split("\n").map(u => u.trim()).filter(u => u.length > 0);
+  if (urls.length > 20) { alert("Maximum 20 URLs at once."); return; }
+
+  const resultsDiv = document.getElementById("bulkResults");
+  resultsDiv.innerHTML = `<p style="color:#8b949e;">Analyzing ${urls.length} URLs...</p>`;
+
+  const results = [];
+  for (const url of urls) {
+    try {
+      const res = await fetch("http://127.0.0.1:5000/url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: url })
+      });
+      const data = await res.json();
+      results.push({ url, prediction: data.prediction, confidence: data.confidence });
+      saveToHistory("URL", url, data.prediction, data.confidence);
+    } catch {
+      results.push({ url, prediction: "Error", confidence: 0 });
+    }
+  }
+
+  const phishCount = results.filter(r => r.prediction === "Phishing").length;
+  const safeCount = results.filter(r => r.prediction === "Safe").length;
+
+  resultsDiv.innerHTML = `
+    <div class="summary-bar">
+      <div class="summary-item"><div class="num" style="color:#e6edf3;">${results.length}</div><p>Total Checked</p></div>
+      <div class="summary-item"><div class="num" style="color:#f85149;">${phishCount}</div><p>Phishing Found</p></div>
+      <div class="summary-item"><div class="num" style="color:#1abc9c;">${safeCount}</div><p>Safe URLs</p></div>
+    </div>
+    ${results.map(r => `
+      <div class="bulk-result ${r.prediction.toLowerCase()}">
+        <div class="bulk-url">${r.url}</div>
+        <div>
+          <span class="bulk-badge ${r.prediction.toLowerCase()}">${r.prediction}</span>
+          <div style="color:#8b949e; font-size:11px; margin-top:4px; text-align:right;">${Math.round(r.confidence*100)}% confidence</div>
+        </div>
+      </div>`).join("")}`;
+}
+</script>
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+<script>
+function toggleTheme() { document.body.classList.toggle("light-mode"); localStorage.setItem("theme", document.body.classList.contains("light-mode") ? "light" : "dark"); }
+window.onload = function() { if (localStorage.getItem("theme") === "light") document.body.classList.add("light-mode"); }
+</script>
+</body>
+</html>

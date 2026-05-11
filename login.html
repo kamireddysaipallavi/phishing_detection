@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login - TRUSTA</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+/* ROLE SELECT BUTTONS */
+.role-select{
+  display:flex;
+  gap:10px;
+  margin:10px 0;
+}
+
+.role-btn{
+  flex:1;
+  padding:10px;
+  border:1px solid #cbd5f5;
+  background:#f8fbff;            /* light background */
+  color:#334155;                 /* dark text */
+  border-radius:10px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:600;
+  transition:0.3s;
+}
+
+.role-btn:hover{
+  border-color:#3b82f6;
+  color:#3b82f6;
+}
+
+/* ACTIVE BUTTON */
+.role-btn.active{
+  border-color:#3b82f6;
+  color:white;
+  background:#3b82f6;
+}
+
+/* REMEMBER ME */
+.remember{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:10px 0;
+  color:#475569;
+  font-size:13px;
+}
+
+.remember input{
+  width:16px;
+  height:16px;
+  accent-color:#3b82f6;
+}
+
+/* PASSWORD WRAP */
+.pwd-wrap{
+  position:relative;
+  margin:10px 0;
+}
+
+.pwd-wrap input{
+  display:block!important;
+  width:100%!important;
+  padding:12px 45px 12px 15px!important;
+  border-radius:10px!important;
+  border:1px solid #94a3b8!important;
+  background:#f8fbff!important;
+  color:#1e293b!important;
+  font-size:15px!important;
+  box-sizing:border-box!important;
+  margin:0!important;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+}
+
+.pwd-wrap input:focus{
+  outline:none!important;
+  border-color:#3b82f6!important;
+  box-shadow:0 0 0 3px rgba(59,130,246,0.2);
+}
+
+/* EYE BUTTON */
+.eye-btn{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  background:none!important;
+  border:none!important;
+  color:#64748b;
+  cursor:pointer;
+  font-size:16px;
+}
+
+/* TEXT INPUT */
+.txt-input{
+  display:block;
+  width:100%;
+  padding:12px 15px;
+  border-radius:10px;
+  border:1px solid #94a3b8;
+  background:#f8fbff;
+  color:#1e293b;
+  font-size:15px;
+  box-sizing:border-box;
+  margin:10px 0;
+  box-shadow:0 2px 6px rgba(0,0,0,0.08);
+}
+
+.txt-input:focus{
+  outline:none;
+  border-color:#3b82f6;
+  box-shadow:0 0 0 3px rgba(59,130,246,0.2);
+}
+
+/* BUTTON */
+.full-btn{
+  width:100%;
+  padding:12px;
+  background:#3b82f6;
+  color:white;
+  border:none;
+  border-radius:10px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:8px;
+  transition:0.3s;
+}
+
+.full-btn:hover{
+  background:#2563eb;
+}
+</style>
+</head>
+<body>
+<div class="navbar">
+<a href="index.html">Home</a>
+<a href="register.html">Register</a>
+<a href="login.html">Login</a>
+<a href="url.html">URL Analysis</a>
+<a href="email.html">Email Analysis</a>
+<a href="sms.html">SMS Analysis</a>
+<a href="bulk.html">Bulk Checker</a>
+<a href="result.html">Explainable Result</a>
+
+<a href="quiz.html">Phishing Quiz</a>
+
+<a href="password.html">Password Checker</a>
+
+<a href="userdashboard.html">Dashboard</a>
+
+</div>
+
+<div class="page-wrapper">
+  <div class="content-box">
+    <h2>🔑 User Login</h2>
+    <p style="color:#8b949e;margin-bottom:16px;">Login to access all phishing detection features.</p>
+
+    <p style="color:#8b949e;font-size:13px;margin-bottom:6px;">Login as:</p>
+    <div class="role-select">
+      <button class="role-btn active" id="roleUser" onclick="setRole('user')">👤 User</button>
+      <button class="role-btn" id="roleAdmin" onclick="setRole('admin')"> Admin</button>
+    </div>
+
+    <input type="text" id="username" class="txt-input" placeholder="Enter Username">
+
+    <div class="pwd-wrap">
+      <input type="password" id="password" placeholder="Enter Password">
+      <button class="eye-btn" type="button" onclick="togglePwd('password')"></button>
+    </div>
+
+    <div class="remember">
+      <input type="checkbox" id="rememberMe">
+      <label for="rememberMe">Remember me</label>
+    </div>
+
+    <button class="full-btn" onclick="loginUser()">Login</button>
+    <p id="msg" style="margin-top:10px;font-weight:600;font-size:14px;"></p>
+    <hr style="border:none;border-top:1px solid #21262d;margin:16px 0;">
+    <p style="color:#8b949e;font-size:14px;">Don't have an account? <a href="register.html" style="color:#1abc9c;">Register here</a></p>
+    <p style="color:#484f58;font-size:12px;margin-top:8px;">Admin: username <b>admin</b> / password <b>admin123</b></p>
+  </div>
+</div>
+
+<script>
+let selectedRole = 'user';
+function setRole(r) {
+  selectedRole = r;
+  document.getElementById('roleUser').classList.toggle('active', r==='user');
+  document.getElementById('roleAdmin').classList.toggle('active', r==='admin');
+}
+function togglePwd(id) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function loginUser() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  const remember = document.getElementById('rememberMe').checked;
+  const msg = document.getElementById('msg');
+  if (!username || !password) { msg.style.color='#f85149'; msg.innerText='❌ Please enter username and password.'; return; }
+
+  // Admin login
+  if (selectedRole === 'admin') {
+    if (username === 'admin' && password === 'admin123') {
+      saveSession('admin', 'Administrator', 'admin@trusta.com', 'admin', remember);
+      msg.style.color='#1abc9c'; msg.innerText='✅ Admin login successful!';
+      setTimeout(() => window.location.href='userdashboard.html', 1500);
+    } else { msg.style.color='#f85149'; msg.innerText='❌ Invalid admin credentials.'; }
+    return;
+  }
+
+  // User login
+  const users = JSON.parse(localStorage.getItem('users') || '{}');
+  if (!users[username]) { msg.style.color='#f85149'; msg.innerText='❌ Username not found. Please register first.'; return; }
+  if (users[username].password !== password) { msg.style.color='#f85149'; msg.innerText='❌ Incorrect password.'; return; }
+  saveSession(username, users[username].fullname, users[username].email, 'user', remember);
+  msg.style.color='#1abc9c'; msg.innerText='✅ Login successful! Redirecting...';
+  setTimeout(() => window.location.href='userdashboard.html', 1500);
+}
+function saveSession(username, fullname, email, role, remember) {
+  const data = { username, fullname, email, role, loginTime: new Date().toLocaleString() };
+  localStorage.setItem('currentUser', username);
+  localStorage.setItem('currentUserData', JSON.stringify(data));
+  if (remember) localStorage.setItem('rememberedUser', username);
+}
+window.onload = function() {
+  buildNavbar();
+  const rem = localStorage.getItem('rememberedUser');
+  if (rem) document.getElementById('username').value = rem;
+  if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+}
+function buildNavbar() {
+  const user = localStorage.getItem('currentUser');
+  const nav = document.getElementById('navbar');
+  if (user) {
+    nav.innerHTML = `<a href="index.html">Home</a><a href="url.html">URL Analysis</a><a href="email.html">Email Analysis</a><a href="sms.html">SMS Analysis</a><a href="bulk.html">Bulk Checker</a><a href="result.html">Explainable Result</a><a href="tips.html">Safety Tips</a><a href="quiz.html">Quiz</a><a href="news.html">Threat News</a><a href="password.html">Password Checker</a><a href="auth.html">Authentication</a><a href="userdashboard.html">👤 Dashboard</a><a href="dashboard.html">📊 Stats</a><a href="history.html">History</a><a href="#" onclick="logout()">🚪 Logout</a>`;
+  } else {
+    nav.innerHTML = `<a href="index.html">Home</a><a href="register.html">Register</a><a href="login.html">Login</a><a href="tips.html">Safety Tips</a><a href="quiz.html">Quiz</a><a href="news.html">Threat News</a><a href="password.html">Password Checker</a>`;
+  }
+}
+function logout() { localStorage.removeItem('currentUser'); localStorage.removeItem('currentUserData'); window.location.href='index.html'; }
+function toggleTheme() { document.body.classList.toggle('light-mode'); localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark'); }
+</script>
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+</body>
+</html>

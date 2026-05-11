@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Email Analysis</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/nav.js"></script>
+</head>
+
+<body>
+
+<div class="navbar" id="navbar"></div>
+
+<div class="page-wrapper">
+  <div class="content-box">
+    <h2>📧 Email Analysis</h2>
+    <p style="color:#bdc3c7; margin-bottom:20px;">
+      Paste an email message below to check if it is phishing or safe.
+    </p>
+
+    <input type="text" id="emailInput" placeholder="Enter email content here...">
+    <button onclick="analyzeEmail()">🔍 Analyze</button>
+  </div>
+</div>
+
+<script>
+// ✅ Save per-user history
+function saveToHistory(type, input, result, confidence) {
+  const user = localStorage.getItem("currentUser");
+  if (!user) return;
+
+  const key = "threatHistory_" + user;
+  const history = JSON.parse(localStorage.getItem(key) || "[]");
+
+  history.push({
+    type,
+    input,
+    result,
+    confidence,
+    time: new Date().toLocaleString()
+  });
+
+  localStorage.setItem(key, JSON.stringify(history));
+}
+
+// ✅ MAIN FUNCTION (UPDATED)
+function analyzeEmail() {
+  const input = document.getElementById("emailInput").value.trim();
+
+  if (!input) {
+    alert("Please enter email content.");
+    return;
+  }
+
+  fetch("http://127.0.0.1:5000/email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ input: input })
+  })
+  .then(res => res.json())
+  .then(data => {
+
+    // ✅ Save history (important for dashboard)
+    saveToHistory("Email", input, data.prediction, data.confidence);
+
+    // ✅ Store result for result.html
+    localStorage.setItem("analysisResult", JSON.stringify({
+      type: "Email",
+      input: input,
+      result: data
+    }));
+
+    // ✅ Redirect to explanation page
+    window.location.href = "result.html";
+  })
+  .catch(() => {
+    alert("Backend not reachable. Make sure app.py is running!");
+  });
+}
+
+// ✅ Page init
+window.onload = function() {
+  if (!initPage(true)) return;
+
+  if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light-mode");
+  }
+};
+
+// ✅ Theme toggle
+function toggleTheme() {
+  document.body.classList.toggle("light-mode");
+  localStorage.setItem(
+    "theme",
+    document.body.classList.contains("light-mode") ? "light" : "dark"
+  );
+}
+</script>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
+</body>
+</html>

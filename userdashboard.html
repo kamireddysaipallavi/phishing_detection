@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>User Dashboard - TRUSTA</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.ud-wrap{max-width:900px;margin:30px auto;padding:0 20px;}
+.welcome-box{background:linear-gradient(135deg,#babfc7,#e5f1ec);border:1px solid #1abc9c44;border-radius:14px;padding:28px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;}
+.welcome-left h2{color:#1abc9c;font-size:22px;margin-bottom:6px;}
+.welcome-left p{color:#8b949e;font-size:14px;}
+.status-badge{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700;}
+.status-badge.online{background:#1abc9c22;color:#1abc9c;border:1px solid #1abc9c44;}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat-card{background:#e5f1ec;border:1px solid #30363d;border-radius:12px;padding:18px;text-align:center;}
+.stat-card .num{font-size:28px;font-weight:800;}
+.stat-card p{color:#8b949e;font-size:12px;margin-top:4px;}
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+.quick-card{background:#e5f1ec;border:1px solid #30363d;border-radius:12px;padding:20px;text-align:center;text-decoration:none;color:white;transition:all 0.2s;}
+.quick-card:hover{border-color:#1abc9c;transform:translateY(-4px);}
+.quick-card .icon{font-size:28px;margin-bottom:8px;}
+.quick-card h4{color:#1abc9c;font-size:14px;margin-bottom:4px;}
+.quick-card p{color:#8b949e;font-size:12px;}
+.recent-box{background:#161b2;border:1px solid #30363d;border-radius:12px;padding:20px;}
+.recent-box h3{color:#1abc9c;margin-bottom:16px;font-size:16px;}
+.recent-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #21262d;}
+.recent-item:last-child{border-bottom:none;}
+.recent-left{flex:1;}
+.recent-type{font-size:11px;color:#8b949e;}
+.recent-input{font-size:14px;color:#e6edf3;}
+.recent-time{font-size:11px;color:#484f58;}
+.rbadge{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+.rbadge.phishing{background:#e5f1ec;color:#f85149;}
+.rbadge.safe{background:#e5f1ec;color:#1abc9c;}
+</style>
+</head>
+
+<body>
+
+<div class="navbar" id="navbar"></div>
+
+<div class="ud-wrap">
+
+  <div class="welcome-box">
+    <div class="welcome-left">
+      <h2 id="welcomeMsg">Welcome 👋</h2>
+      <p id="userInfo"></p>
+    </div>
+    <span class="status-badge online">🟢 Logged In</span>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="num" id="totalCount">0</div><p>Total Analyses</p></div>
+    <div class="stat-card"><div class="num" id="urlCount">0</div><p>URLs Checked</p></div>
+    <div class="stat-card"><div class="num" id="emailCount">0</div><p>Emails Checked</p></div>
+    <div class="stat-card"><div class="num" id="phishCount">0</div><p>Threats Found</p></div>
+  </div>
+
+  <div class="quick-grid">
+    <a href="url.html" class="quick-card"><div class="icon">🔗</div><h4>URL</h4></a>
+    <a href="email.html" class="quick-card"><div class="icon">📧</div><h4>Email</h4></a>
+    <a href="sms.html" class="quick-card"><div class="icon">📱</div><h4>SMS</h4></a>
+  </div>
+
+  <div class="recent-box">
+    <h3>🕒 Your Recent Activity</h3>
+    <div id="recentList"></div>
+  </div>
+
+</div>
+
+<script>
+// ✅ CLEAN NAVBAR (NO HISTORY / STATS / AUTH)
+function buildNavbar() {
+  const nav = document.getElementById('navbar');
+  nav.innerHTML = `
+    <a href="index.html">Home</a>
+    <a href="url.html">URL</a>
+    <a href="email.html">Email</a>
+    <a href="sms.html">SMS</a>
+    <a href="bulk.html">Bulk Checker</a>
+    <a href="result.html">Explainable Result</a>
+    <a href="quiz.html">Phishing Quiz</a>
+    <a href="password.html">Password Checker</a>
+    <a href="userdashboard.html">Dashboard</a>
+    <a href="#" onclick="logout()">Logout</a>
+  `;
+}
+
+function logout() {
+  localStorage.removeItem('currentUser');
+  window.location.href = 'index.html';
+}
+
+window.onload = function() {
+
+  buildNavbar();
+
+  const user = localStorage.getItem("currentUser");
+
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  document.getElementById("welcomeMsg").innerText = "Welcome, " + user + " 👋";
+  document.getElementById("userInfo").innerText = "Your Personal Dashboard";
+
+  // ✅ USER-SPECIFIC HISTORY
+  const history = JSON.parse(localStorage.getItem("threatHistory_" + user) || "[]");
+
+  const urlC = history.filter(h => h.type === "URL").length;
+  const emailC = history.filter(h => h.type === "Email").length;
+  const phishC = history.filter(h => h.result === "Phishing").length;
+
+  document.getElementById("totalCount").innerText = history.length;
+  document.getElementById("urlCount").innerText = urlC;
+  document.getElementById("emailCount").innerText = emailC;
+  document.getElementById("phishCount").innerText = phishC;
+
+  // ✅ SHOW RECENT 5
+  const last5 = history.slice(-5).reverse();
+
+  const container = document.getElementById("recentList");
+
+  if (last5.length === 0) {
+    container.innerHTML = "<p style='color:#8b949e'>No activity yet</p>";
+    return;
+  }
+
+  container.innerHTML = last5.map(h => `
+    <div class="recent-item">
+      <div class="recent-left">
+        <div class="recent-type">${h.type}</div>
+        <div class="recent-input">${h.input}</div>
+        <div class="recent-time">${h.time}</div>
+      </div>
+      <span class="rbadge ${h.result.toLowerCase()}">${h.result}</span>
+    </div>
+  `).join("");
+
+}
+</script>
+
+</body>
+</html>

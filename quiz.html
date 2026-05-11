@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Phishing Quiz - TRUSTA</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+.quiz-box { max-width: 700px; margin: 40px auto; padding: 0 20px; }
+.question-card { background: pink; border: 1px solid white; border-radius: 14px; padding: 30px; margin-bottom: 20px; }
+.question-card h3 { color: #e6edf3; font-size: 16px; margin-bottom: 20px; line-height: 1.6; }
+.options { display: flex; flex-direction: column; gap: 10px; }
+.option-btn { padding: 12px 18px; background: white; border: 1px solid #30363d; border-radius: 8px; color: #c9d1d9; cursor: pointer; text-align: left; font-size: 14px; transition: all 0.2s; }
+.option-btn:hover { border-color: #1abc9c; color: #1abc9c; }
+.option-btn.correct { background: white; border-color: #1abc9c; color: #1abc9c; }
+.option-btn.wrong { background:white; border-color: #f85149; color: #f85149; }
+.feedback { margin-top: 12px; padding: 10px 14px; border-radius: 8px; font-size: 14px; display: none; }
+.feedback.show { display: block; }
+.feedback.correct { background: white; color: #1abc9c; border: 1px solid #1abc9c44; }
+.feedback.wrong { background: white; color: #f85149; border: 1px solid #f8514944; }
+.score-box { text-align: center; background: white; border: 1px solid #1abc9c44; border-radius: 14px; padding: 40px; }
+.score-num { font-size: 60px; font-weight: 800; color: #1abc9c; }
+.progress-bar { width: 100%; background: #21262d; border-radius: 10px; height: 8px; margin-bottom: 30px; }
+.progress-fill { height: 8px; background: #1abc9c; border-radius: 10px; transition: width 0.4s; }
+</style>
+</head>
+<body>
+<div class="navbar">
+<a href="index.html">Home</a>
+<a href="register.html">Register</a>
+<a href="login.html">Login</a>
+<a href="url.html">URL Analysis</a>
+<a href="email.html">Email Analysis</a>
+<a href="sms.html">SMS Analysis</a>
+<a href="bulk.html">Bulk Checker</a>
+<a href="result.html">Explainable Result</a>
+
+<a href="quiz.html">Phishing Quiz</a>
+
+<a href="password.html">Password Checker</a>
+<a href="auth.html">User Authentication</a>
+<a href="userdashboard.html">Dashboard</a>
+
+</div>
+
+<div class="quiz-box">
+  <div class="content-box" style="margin-bottom:20px;">
+    <h2>🎯 Phishing Awareness Quiz</h2>
+    <p style="color:#8b949e;">Test your knowledge! Can you identify phishing attacks?</p>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <p id="progressText" style="color:#8b949e; font-size:13px;">Question 1 of 10</p>
+  </div>
+  <div id="quizContainer"></div>
+  <div id="scoreBox" style="display:none;" class="score-box">
+    <div class="score-num" id="scoreNum"></div>
+    <p style="color:#c9d1d9; font-size:18px;">out of 10</p>
+    <p id="scoreMsg" style="color:#8b949e; margin-top:10px;"></p>
+    <br>
+    <button onclick="restartQuiz()" style="background:#1abc9c; color:white; border:none; padding:12px 30px; border-radius:8px; cursor:pointer; font-size:15px; font-weight:700;">🔄 Try Again</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { q: "You receive an email saying 'Your SBI account has been suspended. Click here to verify immediately.' What do you do?", options: ["Click the link and verify", "Delete the email and report it as phishing", "Reply asking for more info", "Forward to friends"], answer: 1, explanation: "This is a classic phishing email using urgency. Legitimate banks never ask you to verify via email links." },
+  { q: "Which URL looks safest to visit for banking?", options: ["http://sbi-secure-login.xyz", "https://www.sbi.co.in", "https://sbi.secure-verify.com", "http://192.168.1.1/sbi"], answer: 1, explanation: "Only the official domain sbi.co.in with HTTPS is safe. Others use fake domains, suspicious TLDs, or IP addresses." },
+  { q: "An email says 'Congratulations! You have won Rs 10,00,000 in our lucky draw. Share your bank details to claim.' This is:", options: ["A genuine prize", "A phishing/scam email", "A government offer", "A bank promotion"], answer: 1, explanation: "No legitimate organization asks for bank details via email to give you a prize. This is a classic advance fee scam." },
+  { q: "You get an SMS with a link: 'Your Paytm wallet is blocked. Verify at http://paytm-verify.tk'. What should you do?", options: ["Click and verify immediately", "Ignore and report the SMS", "Share your OTP to verify", "Call the number in the SMS"], answer: 1, explanation: ".tk is a suspicious domain. Paytm uses paytm.com only. Never click links from unknown SMS messages." },
+  { q: "Which of these is a typosquatting attack?", options: ["https://www.google.com", "https://www.g00gle.com", "https://mail.google.com", "https://drive.google.com"], answer: 1, explanation: "g00gle.com replaces letters with numbers to look like google.com. This is called typosquatting." },
+  { q: "A website uses HTTPS. Does that mean it is 100% safe?", options: ["Yes, HTTPS always means safe", "No, phishing sites can also use HTTPS", "Yes, only banks use HTTPS", "No, HTTPS means it's definitely phishing"], answer: 1, explanation: "HTTPS only means the connection is encrypted. Phishing sites can and do use HTTPS certificates." },
+  { q: "An email from 'support@paypa1.com' asks you to reset your password. What is wrong?", options: ["Nothing, it looks fine", "The domain is paypa1.com not paypal.com", "The email subject is wrong", "Nothing suspicious here"], answer: 1, explanation: "paypa1.com uses the number 1 instead of letter l. This is typosquatting to impersonate PayPal." },
+  { q: "What does a phishing URL like 'login.verify.account.secure-bank.xyz' use to trick you?", options: ["Too many subdomains and suspicious TLD", "It looks exactly like a bank URL", "It uses HTTPS so it is safe", "It has the word bank in it"], answer: 0, explanation: "Multiple subdomains hide the real domain (secure-bank.xyz) and .xyz is a suspicious TLD used in phishing." },
+  { q: "Someone calls claiming to be from your bank and asks for your OTP. What should you do?", options: ["Share the OTP to verify identity", "Hang up immediately and call your bank directly", "Share only the first 3 digits", "Ask them to send an email first"], answer: 1, explanation: "Banks NEVER ask for OTP over phone or email. Hang up and call your bank on their official number." },
+  { q: "Which of these email senders is most suspicious?", options: ["noreply@amazon.com", "support@amaz0n-help.xyz", "orders@amazon.in", "returns@amazon.com"], answer: 1, explanation: "amaz0n-help.xyz uses digit substitution and a suspicious .xyz domain. Always check the full sender email address." }
+];
+
+let current = 0, score = 0, answered = false;
+
+function renderQuestion() {
+  if (current >= questions.length) { showScore(); return; }
+  const q = questions[current];
+  const pct = (current / questions.length) * 100;
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("progressText").innerText = `Question ${current+1} of ${questions.length}`;
+  document.getElementById("quizContainer").innerHTML = `
+    <div class="question-card">
+      <h3>Q${current+1}. ${q.q}</h3>
+      <div class="options">
+        ${q.options.map((o,i) => `<button class="option-btn" onclick="selectAnswer(${i})" id="opt${i}">${String.fromCharCode(65+i)}. ${o}</button>`).join("")}
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div id="nextBtn" style="display:none; margin-top:16px;">
+        <button onclick="nextQuestion()" style="background:#1abc9c; color:white; border:none; padding:10px 24px; border-radius:8px; cursor:pointer; font-weight:700;">${current === questions.length-1 ? "See Results" : "Next Question →"}</button>
+      </div>
+    </div>`;
+  answered = false;
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const feedback = document.getElementById("feedback");
+  document.querySelectorAll(".option-btn").forEach(b => b.style.pointerEvents = "none");
+  if (idx === q.answer) {
+    score++;
+    document.getElementById("opt"+idx).classList.add("correct");
+    feedback.className = "feedback show correct";
+    feedback.innerHTML = "✅ Correct! " + q.explanation;
+  } else {
+    document.getElementById("opt"+idx).classList.add("wrong");
+    document.getElementById("opt"+q.answer).classList.add("correct");
+    feedback.className = "feedback show wrong";
+    feedback.innerHTML = "❌ Wrong. " + q.explanation;
+  }
+  document.getElementById("nextBtn").style.display = "block";
+}
+
+function nextQuestion() { current++; renderQuestion(); }
+
+function showScore() {
+  document.getElementById("quizContainer").style.display = "none";
+  document.getElementById("scoreBox").style.display = "block";
+  document.getElementById("progressFill").style.width = "100%";
+  document.getElementById("progressText").innerText = "Quiz Complete!";
+  document.getElementById("scoreNum").innerText = score;
+  const msgs = ["Keep learning! Review the safety tips.", "Good effort! You can do better.", "Not bad! Keep practicing.", "Good job! You know phishing well.", "Excellent! You are phishing-aware! 🛡️"];
+  document.getElementById("scoreMsg").innerText = msgs[Math.min(Math.floor(score/2), 4)];
+}
+
+function restartQuiz() {
+  current = 0; score = 0;
+  document.getElementById("quizContainer").style.display = "block";
+  document.getElementById("scoreBox").style.display = "none";
+  renderQuestion();
+}
+
+renderQuestion();
+</script>
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+<script>
+function toggleTheme() { document.body.classList.toggle("light-mode"); localStorage.setItem("theme", document.body.classList.contains("light-mode") ? "light" : "dark"); }
+window.onload = function() { if (localStorage.getItem("theme") === "light") document.body.classList.add("light-mode"); }
+</script>
+</body>
+</html>
